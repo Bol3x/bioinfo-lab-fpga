@@ -26,7 +26,30 @@ m = len(b)
 #calculates the penalty of matching amino1 to amino2
 def calculatePenalty(a, amino1, amino2):
     return 0 	if (amino1 == amino2) or (amino1 == "X" and amino2 not in a) 	else 3
-	
+
+
+ 
+#finds the minimum edit distance between a single amino acid and a codon within a nucleotide sequence seq
+def minCodonPenalty(amino, seq):
+	minPenalty = 0
+ 
+ 	#todo: create amino to codon function, returns a list of codons that encode to the amino
+	amino_codons = aminoToCodon(amino)
+
+	for i in range(len(seq)):
+		#get codon from seq
+		seq_codon = seq[i-2:]
+
+		#todo: implement/call an edit distance implementation 
+  		# to find minimum edit distance between amino and codon, for all shifts in seq
+		for codon in amino_codons:
+			penalty = editDistance(codon, seq_codon)
+		
+			if penalty < minPenalty:
+				minPenalty = penalty
+   
+	return minPenalty
+ 
 
 #main peltola algorithm
 def peltolaAlg(amino_seq, nucleotide_seq, n, m):
@@ -57,49 +80,23 @@ def peltolaAlg(amino_seq, nucleotide_seq, n, m):
 								memo[i-1][j-4] + del1,
 								memo[i-1][j-5] + del2,
 							)
-    
-	memo = peltolaCont(memo, n, m, amino_seq, nucleotide_seq)
-	return memo[n-1][m-1]
 
-
-
-
-#finds the minimum edit distance between a single amino acid and a codon within a nucleotide sequence seq
-def minCodonPenalty(amino, seq):
-	minPenalty = 0
- 
- 	#todo: create amino to codon function, returns a list of codons that encode to the amino
-	amino_codons = aminoToCodon(amino)
-
-	for i in range(len(seq)):
-		#get codon from seq
-		seq_codon = seq[i-2:]
-
-		#todo: implement/call an edit distance implementation 
-  		# to find minimum edit distance between amino and codon, for all shifts in seq
-		for codon in amino_codons:
-			penalty = editDistance(codon, seq_codon)
-		
-			if penalty < minPenalty:
-				minPenalty = penalty
-   
-	return minPenalty
-
+	return memo
 
 
 
 # continuation of main algorithm, used to find more homologies in the sequence
-def peltolaCont(memo, n, m, amino_seq, nucleotide_seq):
+def peltolaCont(scores, n, m, amino_seq, nucleotide_seq):
     for i in range(n):
         for j in range(m):
             #update matrix E
-            memo[i][j] = min(
-				memo[i-1][j-1] + minCodonPenalty(amino_seq[i], nucleotide_seq[j]),
-				memo[i-1][j-2] + minCodonPenalty(amino_seq[i], nucleotide_seq[j-1:]),
-				memo[i-1][j-3] + minCodonPenalty(amino_seq[i], nucleotide_seq[j-2:]),
-				memo[i-1][j-4] + minCodonPenalty(amino_seq[i], nucleotide_seq[j-3:]),
-				memo[i-1][j-5] + minCodonPenalty(amino_seq[i], nucleotide_seq[j-4:])
+            scores[i][j] = min(
+				scores[i-1][j-1] + minCodonPenalty(amino_seq[i], nucleotide_seq[j]),
+				scores[i-1][j-2] + minCodonPenalty(amino_seq[i], nucleotide_seq[j-1:]),
+				scores[i-1][j-3] + minCodonPenalty(amino_seq[i], nucleotide_seq[j-2:]),
+				scores[i-1][j-4] + minCodonPenalty(amino_seq[i], nucleotide_seq[j-3:]),
+				scores[i-1][j-5] + minCodonPenalty(amino_seq[i], nucleotide_seq[j-4:])
 			)
             
-    return memo
+    return scores
     
